@@ -1,53 +1,38 @@
 function createElement(config) {
+    let temp;
     if ("element" in config) {
         temp = document.createElement(config.element);
-
-    } else {
-        temp = document.createElement("div");
-
     }
-
+    else {
+        temp = document.createElement("div");
+    }
     let attributes = config.attributes;
-
     for (let value in attributes) {
         temp.setAttribute(value, attributes[value]);
     }
-
-
-
     for (let value in config.style) {
-
         temp.style[value] = config.style[value];
     }
-
-
     if ("id" in config) {
         temp.id = config.id;
     }
-
     if ("class" in config) {
         temp.className = config.class;
     }
-
     if ("innerText" in config) {
         temp.textContent = config.innerText;
     }
-
     if ("innerHTML" in config) {
         temp.innerHTML = config.innerHTML;
     }
-
     let listeners = config.listeners;
-
     for (let value in listeners) {
         temp.addEventListener(value, function () {
             listeners[value].bind(this)();
         });
     }
-
     return temp;
 }
-
 /**
  * A toggle class
  */
@@ -114,7 +99,8 @@ class Selectables {
         }
         element.classList.add("selected");
         if (sceneID) {
-            DDMinstance.selectedValues[sceneID] = element.innerText;
+            let selectedValue = element.getAttribute("data-alttext");
+            DDMinstance.selectedValues[sceneID] = selectedValue ? selectedValue : element.innerText;
             DDMinstance.updateSelectVals(sceneID);
         }
     }
@@ -257,19 +243,20 @@ class dropDownMenu {
                 shouldShowValue = this.scenes[item.open].data.selectableScene === true;
             }
         }
-
-
-        let tempConfig = {
+        const tempConfig = {
             "class": "menuItemText",
         };
-
-        if(item.html){
+        if (item.html) {
             tempConfig.innerHTML = item.html;
-        }else{
+        }
+        else {
             tempConfig.innerText = item.text;
         }
-
-       
+        if (item.altText) {
+            tempConfig.attributes = {
+                "data-alttext": item.altText
+            };
+        }
         const menuConfig = {
             "class": isHeading ? "menuHeading" : "menuItem",
         };
@@ -278,7 +265,9 @@ class dropDownMenu {
         }
         const menuItem = createElement(menuConfig);
         const menuItemText = createElement(tempConfig);
-        
+        if (item.altText) {
+            menuItem.setAttribute("data-alttext", item.altText);
+        }
         if (!isHeading && "iconID" in item) {
             const menuItemIcon = createElement({
                 "class": "menuItemIcon",
@@ -291,7 +280,6 @@ class dropDownMenu {
                 this.open(item.open);
             });
         }
-
         if (isHeading && item.hideArrow !== true) {
             const menuItemIcon = createElement({
                 "class": "menuItemIcon menuItemIconBack",
@@ -307,10 +295,12 @@ class dropDownMenu {
                 (_a = item.callback) === null || _a === void 0 ? void 0 : _a.bind(menuItem)();
             });
         }
+        // Should be before selectWithoutCallback is called to make sure
+        // .innerText is not an empty string
+        menuItem.append(menuItemText);
         if (item.selected) {
             if (sceneID) {
                 Selectables.selectWithoutCallback(menuItem, this, sceneID, sceneElem);
-                this.selectedValues[sceneID] = menuItemText.innerText;
                 this.updateSelectVals(sceneID);
             }
         }
@@ -323,10 +313,6 @@ class dropDownMenu {
                 Selectables.selectWithoutCallback(menuItem, this, sceneID, sceneElem);
             });
         }
-
-
-        menuItem.append(menuItemText);
-
         if (item.textBox) {
             const textBox = createElement({
                 "element": "input",
@@ -498,4 +484,4 @@ class dropDownMenu {
         return null;
     }
 }
-//# sourceMappingURL=DDM.js.map
+//# sourceMappingURL=test.js.map

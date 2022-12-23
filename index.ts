@@ -41,48 +41,29 @@ interface menuSceneConfig {
 
 function createElement(config: createElementConfig): HTMLElement {
     let temp: HTMLElement;
-    if ("element" in config) {
-        temp = document.createElement(config.element!);
-
-    } else {
-        temp = document.createElement("div");
-
-    }
+    if ("element" in config) temp = document.createElement(config.element!);
+    else temp = document.createElement("div");
 
     let attributes = config.attributes;
 
-    for (let value in attributes) {
-        temp.setAttribute(value, attributes[value]);
-    }
+    for (let value in attributes) temp.setAttribute(value, attributes[value]);
 
 
 
-    for (let value in config.style) {
-
-        temp.style[value] = config.style[value];
-    }
+    for (let value in config.style) temp.style[value] = config.style[value];
 
 
-    if ("id" in config) {
-        temp.id = config.id!;
-    }
+    if ("id" in config) temp.id = config.id!;
 
-    if ("class" in config) {
-        temp.className = config.class!;
-    }
+    if ("class" in config) temp.className = config.class!;
 
-    if ("innerText" in config) {
-        temp.textContent = config.innerText!;
-    }
+    if ("innerText" in config) temp.textContent = config.innerText!;
 
-    if ("innerHTML" in config) {
-        temp.innerHTML = config.innerHTML!;
-    }
+    if ("innerHTML" in config) temp.innerHTML = config.innerHTML!;
 
     let listeners = config.listeners;
 
     for (let value in listeners) {
-        console.log(value);
         temp.addEventListener(value, function () {
             listeners[value].bind(this)();
         });
@@ -106,17 +87,13 @@ class Toggle {
      * Turns the toggle on if it isn't already on
      */
     turnOn() {
-        if (!this.isOn()) {
-            this.element.click();
-        }
+        if (!this.isOn()) this.element.click();
     }
     /**
      * Turns the toggle off if it isn't already off
      */
     turnOff() {
-        if (this.isOn()) {
-            this.element.click();
-        }
+        if (this.isOn()) this.element.click();
     }
 
     /**
@@ -131,11 +108,8 @@ class Toggle {
      * Toggles the toggle
      */
     toggle() {
-        if (this.isOn()) {
-            this.turnOff();
-        } else {
-            this.turnOn();
-        }
+        if (this.isOn()) this.turnOff();
+        else this.turnOn();
     }
 }
 
@@ -178,13 +152,9 @@ class Scene {
 
         this.element.querySelector(".scene")?.append(item);
 
-        if (config.selected) {
-            item.click();
-        }
+        if (config.selected) item.click();
 
-        if (this.element.classList.contains("active")) {
-            this.DDMinstance.menuCon.style.height = (this.element.querySelector<HTMLElement>(".scene")?.offsetHeight ?? 100) + "px";
-        }
+        if (this.element.classList.contains("active")) this.DDMinstance.menuCon.style.height = (this.element.querySelector<HTMLElement>(".scene")?.offsetHeight ?? 100) + "px";
     }
 
     delete() {
@@ -201,20 +171,15 @@ class Scene {
 
         let sceneDOM = this.element.querySelector(".scene");
 
-        if (sceneDOM) {
-            sceneDOM.innerHTML = "";
-        }
+        if (sceneDOM) sceneDOM.innerHTML = "";
 
-        if (this.data.id in this.DDMinstance.selectedValues) {
-            this.DDMinstance.selectedValues[this.data.id] = "";
-        }
+        if (this.data.id in this.DDMinstance.selectedValues) this.DDMinstance.selectedValues[this.data.id] = "";
 
         this.DDMinstance.updateSelectVals(this.data.id);
         this.DDMinstance.deleteSceneFromHistory(this.data.id);
 
-        for (const item of this.data.items) {
-            this.DDMinstance.deleteItem(item);
-        }
+        for (const item of this.data.items) this.DDMinstance.deleteItem(item);
+
         this.data.items = [];
     }
 }
@@ -235,24 +200,14 @@ class dropDownMenu {
         this.selections = {};
         this.selectedValues = {};
         this.selectedValuesDOM = {};
-        for (const scene of scenes) {
-            this.scenes[scene.id] = new Scene(scene, this);
-        }
+        for (const scene of scenes) this.scenes[scene.id] = new Scene(scene, this);
 
-        for (const scene of scenes) {
-            if (!this.scenes[scene.id].element) {
-                this.makeScene(scene);
-            }
-        }
+        for (const scene of scenes) if (!this.scenes[scene.id].element) this.makeScene(scene);
 
         menuCon.onscroll = function () {
             menuCon.scrollLeft = 0;
         };
-
-
-
     }
-
 
     /**
      * Opens a scene
@@ -261,16 +216,13 @@ class dropDownMenu {
     open(id: string | undefined) {
         if (id && id in this.scenes) {
 
-            if (!this.history.length || (this.history.length && this.history[this.history.length - 1] != id)) {
-                this.history.push(id);
-            }
+            if (!this.history.length || (this.history.length && this.history[this.history.length - 1] != id)) this.history.push(id);
+
             for (const sceneID in this.scenes) {
                 if (sceneID === id) {
                     this.scenes[sceneID].element.classList.add("active");
                     this.menuCon.style.height = this.scenes[sceneID].element.querySelector(".scene").offsetHeight + "px";
-                } else {
-                    this.scenes[sceneID].element.classList.remove("active");
-                }
+                } else this.scenes[sceneID].element.classList.remove("active");
             }
 
         }
@@ -284,9 +236,7 @@ class dropDownMenu {
         if (this.history.length > 1) {
             let lastHistory = this.history.pop();
             this.open(this.history.pop());
-        } else {
-            this.closeMenu();
-        }
+        } else this.closeMenu();
     }
 
 
@@ -319,9 +269,7 @@ class dropDownMenu {
 
         if (item.open) {
             item.selectedValue = this.selectedValues[item.open];
-            if (this.scenes[item.open] instanceof Scene) {
-                shouldShowValue = this.scenes[item.open].data.selectableScene === true;
-            }
+            if (this.scenes[item.open] instanceof Scene) shouldShowValue = this.scenes[item.open].data.selectableScene === true;
         }
 
 
@@ -329,9 +277,7 @@ class dropDownMenu {
             "class": isHeading ? "menuHeading" : "menuItem",
         };
 
-        if (item.attributes) {
-            menuConfig.attributes = item.attributes;
-        }
+        if (item.attributes) menuConfig.attributes = item.attributes;
 
         const menuItem = createElement(menuConfig);
 
@@ -382,9 +328,7 @@ class dropDownMenu {
 
         if (item.highlightable) {
 
-            if (item.id) {
-                this.selections[item.id] = new Selectables(menuItem);
-            }
+            if (item.id) this.selections[item.id] = new Selectables(menuItem);
 
             menuItem.setAttribute("highlightable", "true");
             menuItem.addEventListener("click", () => {
@@ -393,9 +337,7 @@ class dropDownMenu {
 
                     for (let i = 0; i < siblings.length; i++) {
                         let child = siblings[i];
-                        if (child.getAttribute("highlightable") === "true") {
-                            child.classList.remove("selected");
-                        }
+                        if (child.getAttribute("highlightable") === "true") child.classList.remove("selected");
                     }
 
                     menuItem.classList.add("selected");
@@ -433,9 +375,7 @@ class dropDownMenu {
             }
 
             textBox.addEventListener("input", function (event) {
-                if (item.onInput) {
-                    item.onInput(event);
-                }
+                if (item.onInput) item.onInput(event);
             });
 
 
@@ -444,7 +384,6 @@ class dropDownMenu {
 
 
         if (shouldShowValue) {
-
             const valueDOM = createElement({
                 "innerText": item.selectedValue,
                 "class": "menuItemValue"
@@ -454,17 +393,12 @@ class dropDownMenu {
             item.valueDOM = valueDOM;
 
             if (item.open) {
-                if (!this.selectedValuesDOM[item.open]) {
-                    this.selectedValuesDOM[item.open] = {};
-                }
+                if (!this.selectedValuesDOM[item.open]) this.selectedValuesDOM[item.open] = {};
 
                 const sValue = this.selectedValuesDOM[item.open];
 
-                if (sValue.elements) {
-                    sValue.elements.push(valueDOM);
-                } else {
-                    sValue.elements = [valueDOM];
-                }
+                if (sValue.elements) sValue.elements.push(valueDOM); 
+                else sValue.elements = [valueDOM];
             }
         }
 
@@ -494,9 +428,7 @@ class dropDownMenu {
 
             });
 
-            if (item.id) {
-                this.toggles[item.id] = new Toggle(toggle);
-            }
+            if (item.id)  this.toggles[item.id] = new Toggle(toggle);
             menuItem.append(toggle);
         }
 
@@ -508,11 +440,7 @@ class dropDownMenu {
      * @param {string} sceneID the sceneID of the scene whose selected values will be updated
      */
     updateSelectVals(sceneID: string) {
-        if (this.selectedValuesDOM[sceneID]) {
-            for (const elems of this.selectedValuesDOM[sceneID].elements) {
-                elems.innerText = this.selectedValues[sceneID];
-            }
-        }
+        if (this.selectedValuesDOM[sceneID]) for (const elems of this.selectedValuesDOM[sceneID].elements) elems.innerText = this.selectedValues[sceneID];
     }
 
 
@@ -540,9 +468,7 @@ class dropDownMenu {
             let newItemConfig = item;
             if (item.open) {
                 const openScene = this.scenes[item.open];
-                if (!openScene.element && openScene.data.selectableScene) {
-                    this.makeScene(this.scenes[item.open].data);
-                }
+                if (!openScene.element && openScene.data.selectableScene) this.makeScene(this.scenes[item.open].data);
             }
 
             scene.append(this.makeItem(newItemConfig, false, config.id));
@@ -573,32 +499,22 @@ class dropDownMenu {
 
     deleteItem(item: menuItemConfig) {
 
-        if (item.id && item.id in this.selections) {
-            delete this.selections[item.id];
-        }
+        if (item.id && item.id in this.selections) delete this.selections[item.id];
 
-        if (item.id && item.id in this.toggles) {
-            delete this.toggles[item.id];
-        }
+        if (item.id && item.id in this.toggles) delete this.toggles[item.id];
 
         if (item.open) {
             const elem = this.selectedValuesDOM[item.open];
             if (elem) {
                 const elements = elem.elements;
                 let idx = elements.indexOf(item.valueDOM);
-                if (idx > -1) {
-                    elements.splice(idx, 1);
-                }
+                if (idx > -1) elements.splice(idx, 1);
             }
         }
     }
 
     deleteSceneFromHistory(val: string) {
-        for (let i = this.history.length - 1; i >= 0; i--) {
-            if (this.history[i] == val) {
-                this.history.splice(i, 1);
-            }
-        }
+        for (let i = this.history.length - 1; i >= 0; i--) if (this.history[i] == val) this.history.splice(i, 1);
     }
 
     /**
@@ -607,10 +523,7 @@ class dropDownMenu {
      * @returns {Toggle | null}
      */
     getToggle(id: string): Scene | null {
-        if (id in this.toggles) {
-            return this.toggles[id];
-        }
-
+        if (id in this.toggles) return this.toggles[id];
         return null;
     }
 
@@ -620,9 +533,7 @@ class dropDownMenu {
      * @returns {Scene | null}
      */
     getScene(id: string): Scene | null {
-        if (id in this.scenes) {
-            return this.scenes[id];
-        }
+        if (id in this.scenes) return this.scenes[id];
         return null;
     }
 }

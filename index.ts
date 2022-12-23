@@ -212,18 +212,11 @@ class Scene {
 
         let sceneElem = this.element.querySelector(".scene");
 
-        if(sceneElem){
-            let item = this.DDMinstance.makeItem(config, isHeading, this.data.id, <HTMLElement>sceneElem);
-            if(config.selected && config.triggerCallbackIfSelected === true){
-                item.click();
-            }
-            sceneElem.append(item);
-        }
+        let item = this.DDMinstance.makeItem(config, isHeading, this.data.id, <HTMLElement>sceneElem);
+        sceneElem?.append(item);
+        if(config.selected && config.triggerCallbackIfSelected === true) item.click();
 
-
-        if (this.element.classList.contains("active")) {
-            this.DDMinstance.menuCon.style.height = (this.element.querySelector<HTMLElement>(".scene")?.offsetHeight ?? 100) + "px";
-        }
+        if (this.element.classList.contains("active")) this.DDMinstance.menuCon.style.height = (this.element.querySelector<HTMLElement>(".scene")?.offsetHeight ?? 100) + "px";
     }
 
     delete() {
@@ -308,9 +301,7 @@ class dropDownMenu {
                 if (sceneID === id) {
                     this.scenes[sceneID].element.classList.add("active");
                     this.menuCon.style.height = this.scenes[sceneID].element.querySelector<HTMLElement>(".scene").offsetHeight + "px";
-                } else {
-                    this.scenes[sceneID].element.classList.remove("active");
-                }
+                } else this.scenes[sceneID].element.classList.remove("active");
             }
 
         }
@@ -455,9 +446,7 @@ class dropDownMenu {
 
         if (item.highlightable) {
 
-            if (item.id) {
-                this.selections[item.id] = new Selectables(menuItem, this, sceneID, sceneElem);
-            }
+            if (item.id) this.selections[item.id] = new Selectables(menuItem, this, sceneID, sceneElem);
 
             menuItem.setAttribute("highlightable", "true");
             menuItem.addEventListener("click", () => {

@@ -1,41 +1,47 @@
 interface createElementConfig {
-    element?: string | undefined,
-    attributes?: { [key: string]: string } | undefined,
-    style?: { [key: string]: string } | undefined,
-    class?: string | undefined,
-    id?: string | undefined,
-    innerText?: string | undefined,
-    innerHTML?: string | undefined,
+    element?: string,
+    attributes?: { [key: string]: string } ,
+    style?: { [key: string]: string },
+    class?: string,
+    id?: string,
+    innerText?: string,
+    innerHTML?: string,
     listeners?: { [key: string]: Function }
 }
 
 interface menuItemConfig {
-    open: string | undefined,
-    attributes: { [key: string]: string } | undefined,
-    iconID: string | undefined,
-    hideArrow: boolean | undefined,
-    callback: Function | undefined,
-    selected: boolean | undefined,
-    highlightable: boolean | undefined,
-    id: string | undefined,
-    text: string | undefined,
-    textBox: boolean | undefined,
-    value: string | undefined,
-    onInput: Function | undefined,
-    toggle: boolean | undefined,
-    on: boolean | undefined,
-    toggleOn: Function | undefined,
-    toggleOff: Function | undefined,
-    selectedValue: string | undefined,
-    valueDOM: HTMLElement | undefined
+    open?: string,
+    attributes? : { [key: string]: string },
+    classes : Array<string>,
+    iconID?: string,
+    hideArrow? : boolean,
+    callback?: Function,
+    selected?: boolean,
+    highlightable?: boolean,
+    id?: string,
+    text?: string,
+    html?: string,
+    altText? : string,
+    textBox?: boolean,
+    value?: string,
+    onInput?: Function,
+    toggle?: boolean,
+    color? : boolean,
+    on?: boolean,
+    toggleOn?: Function,
+    toggleOff?: Function,
+    selectedValue?: string,
+    valueDOM?: HTMLElement,
+    triggerCallbackIfSelected?: boolean,
 }
 
 interface menuSceneConfig {
-    config: menuItemConfig,
+    config?: menuItemConfig,
     id: string,
-    heading: menuItemConfig,
+    selectableScene? : boolean,
+    heading?: menuItemConfig,
     items: Array<menuItemConfig>,
-    element: HTMLElement
+    element?: HTMLElement
 }
 
 
@@ -82,7 +88,6 @@ function createElement(config: createElementConfig): HTMLElement {
     let listeners = config.listeners;
 
     for (let value in listeners) {
-        console.log(value);
         temp.addEventListener(value, function () {
             listeners[value].bind(this)();
         });
@@ -142,12 +147,44 @@ class Toggle {
 
 class Selectables {
     element: HTMLElement;
-    constructor(element: HTMLElement) {
+    DDMinstance: dropDownMenu;
+    sceneID: string;
+    sceneElem: HTMLElement;
+
+    constructor(element: HTMLElement, DDMinstance : dropDownMenu, sceneID : string, sceneElem : HTMLElement) {
         this.element = element;
+        this.DDMinstance = DDMinstance;
+        this.sceneID = sceneID;
+        this.sceneElem = sceneElem;
     }
 
     select() {
+        Selectables.selectWithoutCallback(this.element, this.DDMinstance, this.sceneID, this.sceneElem);
+    }
+
+    selectWithCallback(){
         this.element.click();
+    }
+
+    static selectWithoutCallback(element : HTMLElement, DDMinstance : dropDownMenu, sceneID : string, sceneElem : HTMLElement){
+        let parentElement = element.parentElement ? element.parentElement : sceneElem;
+        let siblings = parentElement.children;
+
+        for (let i = 0; i < siblings.length; i++) {
+            let child = siblings[i];
+            if (child.getAttribute("highlightable") === "true") {
+                child.classList.remove("selected");
+            }
+        }
+
+        element.classList.add("selected");
+
+        if (sceneID) {
+            let selectedValue = element.getAttribute("data-alttext");
+            DDMinstance.selectedValues[sceneID] = selectedValue ? selectedValue : element.innerText;
+            DDMinstance.updateSelectVals(sceneID);
+
+        }
     }
 }
 
@@ -173,14 +210,16 @@ class Scene {
         if (!this.DDMinstance) return;
         if (!this.data) return;
 
+        let sceneElem = this.element.querySelector(".scene");
 
-        let item = this.DDMinstance.makeItem(config, isHeading, this.data.id);
-
-        this.element.querySelector(".scene")?.append(item);
-
-        if (config.selected) {
-            item.click();
+        if(sceneElem){
+            let item = this.DDMinstance.makeItem(config, isHeading, this.data.id, <HTMLElement>sceneElem);
+            if(config.selected && config.triggerCallbackIfSelected === true){
+                item.click();
+            }
+            sceneElem.append(item);
         }
+
 
         if (this.element.classList.contains("active")) {
             this.DDMinstance.menuCon.style.height = (this.element.querySelector<HTMLElement>(".scene")?.offsetHeight ?? 100) + "px";
@@ -189,6 +228,7 @@ class Scene {
 
     delete() {
         this.deleteItems();
+        delete this.DDMinstance.scenes[this.data.id];
         this.data = undefined;
         this.DDMinstance = undefined;
         this.element.remove();
@@ -220,7 +260,7 @@ class Scene {
 }
 
 class dropDownMenu {
-    scenes: {};
+    scenes : { [key: string]: Scene } ;
     menuCon: HTMLElement;
     history: Array<string>;
     selections: {};
@@ -267,7 +307,7 @@ class dropDownMenu {
             for (const sceneID in this.scenes) {
                 if (sceneID === id) {
                     this.scenes[sceneID].element.classList.add("active");
-                    this.menuCon.style.height = this.scenes[sceneID].element.querySelector(".scene").offsetHeight + "px";
+                    this.menuCon.style.height = this.scenes[sceneID].element.querySelector<HTMLElement>(".scene").offsetHeight + "px";
                 } else {
                     this.scenes[sceneID].element.classList.remove("active");
                 }
@@ -313,7 +353,7 @@ class dropDownMenu {
      * @param {string} sceneID the sceneID of the scene of which this menuItem is a part of 
      * @returns {HTMLElement}
      */
-    makeItem(itemConfig: menuItemConfig, isHeading: boolean, sceneID: string): HTMLElement {
+    makeItem(itemConfig: menuItemConfig, isHeading: boolean, sceneID: string, sceneElem : HTMLElement): HTMLElement {
         let item = itemConfig;
         let shouldShowValue = false;
 
@@ -325,6 +365,24 @@ class dropDownMenu {
         }
 
 
+        const tempConfig : createElementConfig = {
+            "class": "menuItemText",
+        };
+
+        if(item.html){
+            tempConfig.innerHTML = item.html;
+        }else{
+            tempConfig.innerText = item.text;
+        }
+
+
+        if(item.altText){
+            tempConfig.attributes = {
+                "data-alttext" : item.altText
+            };
+        }
+        
+
         const menuConfig: createElementConfig = {
             "class": isHeading ? "menuHeading" : "menuItem",
         };
@@ -334,6 +392,17 @@ class dropDownMenu {
         }
 
         const menuItem = createElement(menuConfig);
+        const menuItemText = createElement(tempConfig);
+
+        if (item.altText) {
+            menuItem.setAttribute("data-alttext", item.altText);
+        }
+
+        if (item.classes) {
+            for(let className of item.classes){
+                menuItem.classList.add(className);
+            }
+        }
 
         if (!isHeading && "iconID" in item) {
             const menuItemIcon = createElement({
@@ -366,15 +435,19 @@ class dropDownMenu {
 
         if (item.callback) {
             menuItem.addEventListener("click", () => {
-                //here
                 item.callback?.bind(menuItem)();
             });
         }
 
+
+        // Should be before selectWithoutCallback is called to make sure
+        // .innerText is not an empty string
+        menuItem.append(menuItemText);
+
+
         if (item.selected) {
-            menuItem.classList.add("selected");
             if (sceneID) {
-                this.selectedValues[sceneID] = item.text;
+                Selectables.selectWithoutCallback(menuItem, this, sceneID, sceneElem);
                 this.updateSelectVals(sceneID);
             }
         }
@@ -383,41 +456,16 @@ class dropDownMenu {
         if (item.highlightable) {
 
             if (item.id) {
-                this.selections[item.id] = new Selectables(menuItem);
+                this.selections[item.id] = new Selectables(menuItem, this, sceneID, sceneElem);
             }
 
             menuItem.setAttribute("highlightable", "true");
             menuItem.addEventListener("click", () => {
-                if (menuItem.parentElement) {
-                    let siblings = menuItem.parentElement.children;
-
-                    for (let i = 0; i < siblings.length; i++) {
-                        let child = siblings[i];
-                        if (child.getAttribute("highlightable") === "true") {
-                            child.classList.remove("selected");
-                        }
-                    }
-
-                    menuItem.classList.add("selected");
-
-                    if (sceneID) {
-                        this.selectedValues[sceneID] = menuItem.innerText;
-                        this.updateSelectVals(sceneID);
-
-                    }
-                }
-
+                Selectables.selectWithoutCallback(menuItem, this, sceneID, sceneElem);
             });
         }
 
 
-        const menuItemText = createElement({
-            "class": "menuItemText",
-            "innerText": item.text
-        });
-
-
-        menuItem.append(menuItemText);
 
         if (item.textBox) {
             const textBox = <HTMLInputElement>createElement({
@@ -440,6 +488,30 @@ class dropDownMenu {
 
 
             menuItem.append(textBox);
+        }
+
+
+        if (item.color) {
+            const colorInput = <HTMLInputElement>createElement({
+                "element": "input",
+                "class": "colorBox",
+                "attributes": {
+                    "type": "color"
+                }
+            });
+
+            if (item.value) {
+                colorInput.value = item.value;
+            }
+
+            colorInput.addEventListener("input", function (event) {
+                if (item.onInput) {
+                    item.onInput(event);
+                }
+            });
+
+
+            menuItem.append(colorInput);
         }
 
 
@@ -527,12 +599,12 @@ class dropDownMenu {
 
 
         const openScene = this.scenes[config.id];
-        if (openScene.element) {
+        if (openScene?.element) {
             return;
         }
 
         if (config.heading) {
-            scene.append(this.makeItem(config.heading, true, config.id));
+            scene.append(this.makeItem(config.heading, true, config.id, scene));
         }
 
         for (const item of config.items) {
@@ -545,7 +617,7 @@ class dropDownMenu {
                 }
             }
 
-            scene.append(this.makeItem(newItemConfig, false, config.id));
+            scene.append(this.makeItem(newItemConfig, false, config.id, scene));
         }
 
         sceneCon.append(scene);
@@ -556,11 +628,11 @@ class dropDownMenu {
     }
     
     addScene(config: menuSceneConfig) {
+        this.scenes[config.id] = new Scene(config, this);
         const sceneDIV = this.makeScene(config);
         if (sceneDIV) {
             this.menuCon.append(sceneDIV);
             config.element = sceneDIV;
-            this.scenes[config.id] = config;
         }
     }
 
